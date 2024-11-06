@@ -1,0 +1,65 @@
+trigger:
+  branches:
+    include:
+    - dev
+    - qas
+    - prd
+  paths:
+    include:
+    - src
+    - pipelines
+    - azure-pipeline.yml
+
+parameters:
+- name: Environments
+  default: DEV
+  values:
+  - DEV
+  - QAS
+  - PRD
+
+variables:
+  buildTemplate: 'pipelines/azure-build-template.yml'
+  deployTemplate: 'pipelines/azure-deploy-template.yml'
+
+stages:
+  - stage: 'DEV'
+    condition: and(succeeded(), or(eq('${{ parameters.Environments }}', 'DEV'), eq(variables['Build.SourceBranch'], 'refs/heads/development')))
+    displayName: 'Deploy to DEV'
+    jobs:
+      - template: '${{ variables.buildTemplate }}'
+        parameters:
+          variableGroup: CH-DAA-DA-CRM-DEV
+          environment: 'DEV'
+      - template: '${{ variables.deployTemplate }}'
+        parameters:
+          variableGroup: CH-DAA-DA-CRM-DEV
+          environment: 'DEV'
+
+  # - stage: 'QAS'
+  #   condition: and(succeeded(), or(eq('${{ parameters.Environments }}', 'QAS'), eq(variables['Build.SourceBranch'], 'refs/heads/qas')))
+  #   dependsOn: []
+  #   displayName: 'Deploy to QAS'
+  #   jobs:
+  #     - template: '${{ variables.buildTemplate }}'
+  #       parameters:
+  #         variableGroup: CH-DAA-DA-MCDA-QAS
+  #         environment: 'QAS'
+  #     - template: '${{ variables.deployTemplate }}'
+  #       parameters:
+  #         variableGroup: CH-DAA-DA-MCDA-QAS
+  #         environment: 'QAS'
+
+  # - stage: 'PRD'
+  #   condition: and(succeeded(), or(eq('${{ parameters.Environments }}', 'PRD'), eq(variables['Build.SourceBranch'], 'refs/heads/prd')))
+  #   dependsOn: []
+  #   displayName: 'Deploy to PRD'
+  #   jobs:
+  #     - template: '${{ variables.buildTemplate }}'
+  #       parameters:
+  #         variableGroup: CH-DAA-DA-MCDA-PRD
+  #         environment: 'PRD'
+  #     - template: '${{ variables.deployTemplate }}'
+  #       parameters:
+  #         variableGroup: CH-DAA-DA-MCDA-PRD
+  #         environment: 'PRD'
